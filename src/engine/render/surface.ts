@@ -1,0 +1,63 @@
+import { Vector2D } from "../utils";
+import type { Color } from "./color"
+
+export abstract class Surface {
+    public resolution: Vector2D = new Vector2D(0, 0)
+
+    constructor(width: number, height: number) { this.resolution.x = width; this.resolution.y = height }
+
+    abstract drawRect(x: number, y: number, width: number, height: number, color: Color): void
+    abstract drawPoint(x: number, y: number, color: Color): void
+    abstract drawImage(image: HTMLImageElement, x: number, y: number): void
+    abstract clear(): void
+}
+
+export class CanvasSurface extends Surface {
+    private _canvas: HTMLCanvasElement
+    private _ctx: CanvasRenderingContext2D
+
+    constructor(
+        canvas: HTMLCanvasElement,
+        context: CanvasRenderingContext2D,
+        width: number,
+        height: number,
+        ) {
+        super(width, height)
+        this._canvas = canvas
+        this._ctx = context
+    }
+
+    get canvas(): HTMLCanvasElement {
+        return this._canvas
+    }
+
+    get ctx(): CanvasRenderingContext2D {
+        return this._ctx
+    }
+
+    public static new(width: number, height: number): CanvasSurface {
+
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+    
+        return new CanvasSurface(canvas, ctx, width, height)
+    }
+
+    clear() {
+        this._ctx.clearRect(0, 0, this.resolution.x, this.resolution.y)
+    }
+
+    drawPoint(x: number, y: number, color: Color) {
+        this._ctx.fillStyle = color.toString()
+        this._ctx.fillRect(x, y, 1, 1)
+    }
+
+    drawImage(image: HTMLImageElement, x: number, y: number) {
+        this._ctx.drawImage(image, x, y)
+    }
+
+    drawRect(x: number, y: number, width: number, height: number, color: Color) {
+        this._ctx.fillStyle = color.toString()
+        this._ctx.fillRect(x, y, width, height)
+    }
+}

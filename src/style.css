@@ -1,0 +1,41 @@
+@import './styles/reset.css';
+
+body {
+  font-size: 16px;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.mt-lg {
+  margin-top: 2rem;
+}
+
+.breakout-grid {
+  --gap: clamp(1rem, 6vw, 3rem);
+  --full: minmax(var(--gap), 1fr);
+  --content: min(72ch, 100% - var(--gap) * 2);
+  --feature: minmax(0, 1200px);
+
+  display: grid;
+  grid-template-columns: 
+    [full-start] var(--full)
+    [feature-start] var(--feature)
+    [content-start] var(--content) [content-end]
+    var(--feature) [feature-end] 
+    var(--full) [full-end];
+
+  > * {
+    grid-column: content;
+  }
+
+  .feature {
+    grid-column: feature;
+  }
+
+  .full-width {
+    grid-column: full;
+  }
+}
