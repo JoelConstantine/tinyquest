@@ -26,6 +26,12 @@ export class CanvasViewport {
         return new CanvasViewport(CanvasSurface.new(width, height))
     }
 
+    static from(surface: CanvasSurface, width: number, height: number) {
+        const viewport = new CanvasViewport(surface)
+        viewport.adjustResolution(width, height)
+        return viewport
+    }
+
     draw() {
         this.surface.clear()
         this.surface.drawRect(0, 0, this.resolution.x, this.resolution.y, this.backgroundColor)

@@ -6,6 +6,8 @@ export abstract class Surface {
 
     constructor(width: number, height: number) { this.resolution.x = width; this.resolution.y = height }
 
+    adjustResolution(width: number, height: number) { this.resolution.x = width; this.resolution.y = height }
+
     abstract drawRect(x: number, y: number, width: number, height: number, color: Color): void
     abstract drawPoint(x: number, y: number, color: Color): void
     abstract drawImage(image: HTMLImageElement, x: number, y: number): void
@@ -36,11 +38,17 @@ export class CanvasSurface extends Surface {
     }
 
     public static new(width: number, height: number): CanvasSurface {
-
         const canvas = document.createElement('canvas')
         const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     
         return new CanvasSurface(canvas, ctx, width, height)
+    }
+
+    public static from(elem: HTMLCanvasElement | string): CanvasSurface {
+        if (elem instanceof HTMLCanvasElement) return new CanvasSurface(elem, elem.getContext('2d') as CanvasRenderingContext2D, elem.width, elem.height)
+
+        const canvas = document.getElementById(elem) as HTMLCanvasElement
+        return new CanvasSurface(canvas, canvas.getContext('2d') as CanvasRenderingContext2D, canvas.width, canvas.height)
     }
 
     clear() {

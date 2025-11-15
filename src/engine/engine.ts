@@ -1,10 +1,15 @@
+import { EventSystem } from "./events"
 import type { CanvasViewport } from "./render/viewport"
-import { NullScreen, type GameScreen } from "./screen"
+import { NullScreen, type BaseScreen } from "./screen"
 
 
 export class InputManager {
 
 }
+
+export class Logger { }
+
+
 
 abstract class RenderEngine {
     abstract draw(delta?: number): void
@@ -29,11 +34,12 @@ export class BasicCanvasEngine extends RenderEngine {
 
 export class Engine {
     private _lastUpdated: number = 0
-    private _screen: GameScreen = new NullScreen()
+    private _screen: BaseScreen = new NullScreen()
 
     public input: any
-    public render: RenderEngine
-    logger: any
+    render: RenderEngine
+    logger: Logger = new Logger()
+    events: EventSystem = new EventSystem()
     constructor(viewport: CanvasViewport) { 
         this.input = new InputManager()
         this.render = new BasicCanvasEngine(viewport)
@@ -54,5 +60,5 @@ export class Engine {
         })
     }
 
-    changeScreen(screen: GameScreen) { this._screen = screen.init(this) }
+    changeScreen(screen: BaseScreen) { this._screen = screen.init(this) }
 }

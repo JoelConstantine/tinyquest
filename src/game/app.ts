@@ -1,25 +1,20 @@
 import type { Engine } from "../engine/engine";
-import type { GameScreen } from "../engine/screen";
+import { useDebugPanel } from "./debug";
+import { loadGameScreen } from "./screens";
 
-class BlankScreen implements GameScreen {
-    init(_engine: Engine) { return this }
-    pause() { return this }
-    resume() { return this }
-    render(engine: Engine) {
-        engine.render.blankScreen()
-        return this
-    }
-    update(_engine: Engine, _delta: number) { return this }
-}
 
-const blankScreen = new BlankScreen()
 
 export class TinyQuest {
     private engine: Engine
     constructor(engine: Engine) { this.engine = engine }
 
     start() {
+        if (import.meta.env.MODE === 'development') {
+            useDebugPanel('debugPanel')
+        }
+
+        const gameScreen = loadGameScreen()
+        this.engine.changeScreen(gameScreen)
         this.engine.start()
-        this.engine.changeScreen(blankScreen)
     }
 }
