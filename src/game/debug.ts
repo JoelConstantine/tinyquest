@@ -11,8 +11,16 @@
 
 export class DebugPanel {
     elem!: HTMLElement
+    init() {
+        const panel = document.createElement('section')
+        this.elem = panel
+        panel.classList.add('debug-panel')
+        panel.innerText = 'Debug Panel Active'
+        return this
+    }
     attachTo(element: HTMLElement) { 
-        this.elem = element
+        if (!this.elem) this.init()
+        element.appendChild(this.elem)
     }
 }
 

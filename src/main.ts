@@ -5,7 +5,7 @@ import { TinyQuest } from './game/app'
 import { CanvasSurface } from './engine/render/surface'
 
 function main() {
-  const surface = CanvasSurface.from('tinyQuest')
+  const surface = CanvasSurface.from('gameScreen')
   const viewport = CanvasViewport.from(surface, 800, 600)
   const engine = new Engine(viewport)
 

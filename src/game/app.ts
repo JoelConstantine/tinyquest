@@ -10,7 +10,7 @@ export class TinyQuest {
 
     start() {
         if (import.meta.env.MODE === 'development') {
-            useDebugPanel('debugPanel')
+            useDebugPanel('game')
         }
 
         const gameScreen = loadGameScreen()
