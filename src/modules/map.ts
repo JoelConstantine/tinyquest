@@ -6,7 +6,16 @@ export class Tile {
     transparent: boolean = false
     constructor(x: number, y: number) { this.position.x = x; this.position.y = y }
     copy(): Tile {
-        return new Tile(this.position.x, this.position.y)
+        const tile = new Tile(this.position.x, this.position.y)
+        tile.passable = this.passable
+        tile.transparent = this.transparent
+        return tile
+    }
+
+    setPosition(x: number, y: number) {
+        this.position.x = x
+        this.position.y = y
+        return this
     }
 }
 
@@ -18,17 +27,28 @@ export class GameMap {
         this.dimensions = new Vector2D(width, height)
     }
 
-    init() {
+    init(fillTyle?: Tile): GameMap {
+        if (!fillTyle) {
+            fillTyle = new Tile(0, 0)
+            fillTyle.passable = true
+            fillTyle.transparent = true
+        }
+
         for (let y = 0; y < this.dimensions.y; y++) {
             this.tiles[y] = []
             for (let x = 0; x < this.dimensions.x; x++) {
-                this.tiles[y][x] = new Tile(x, y)
+                this.tiles[y][x] = fillTyle.copy().setPosition(x, y)
             }
         }
         return this
     }
 
-    getTile(x: number, y: number): Tile {
+    inBounds(x: number, y: number): boolean {
+        return x >= 0 && x < this.dimensions.x && y >= 0 && y < this.dimensions.y
+    }
+
+    getTile(x: number, y: number): Tile | undefined{
+        if (!this.inBounds(x, y)) return 
         return this.tiles[y][x]
     }
 
@@ -36,9 +56,9 @@ export class GameMap {
         this.tiles[y][x] = tile.copy()
     }
 
-    static new(width: number = 1, height: number = 1) {
+    static new(width: number = 1, height: number = 1, fillTyle?: Tile): GameMap {
         const map = new GameMap(width, height)
        
-        return map.init()
+        return map.init(fillTyle)
     }
 }
