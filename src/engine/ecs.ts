@@ -108,6 +108,13 @@ export class ComponentContainer {
     public delete(componentClass: Function): void {
         this.map.delete(componentClass)
     }
+
+    /**
+     * Returns all component instances in this container.
+     */
+    public getAllComponents(): Component[] {
+        return Array.from(this.map.values())
+    }
 }
 
 /**
@@ -133,6 +140,16 @@ export class ECS {
      * Array of entity ids to destroy on the next update.
      */
     private entitiesToDestroy = new Array<Entity>()
+
+    /**
+     * Registry mapping stable type names to component classes.
+     */
+    private componentRegistry = new Map<string, ComponentClass<Component>>()
+
+    /**
+     * Reverse lookup from component constructor to registered type name.
+     */
+    private componentTypeToName = new Map<Function, string>()
 
     /**
      * Adds an entity to the ECS.
@@ -161,6 +178,26 @@ export class ECS {
     public addComponent(entity: Entity, component: Component): void {
         this.entities.get(entity)?.add(component)
         this.checkE(entity)
+    }
+
+    /**
+     * Register a component class with a stable type name used for serialization.
+     * The `typeName` should be unique and stable across builds (avoid minified names).
+     */
+    public registerComponent<T extends Component>(typeName: string, cls: ComponentClass<T>): void {
+        this.componentRegistry.set(typeName, cls as ComponentClass<Component>)
+        this.componentTypeToName.set(cls, typeName)
+    }
+
+    /**
+     * Unregister a previously registered component type.
+     */
+    public unregisterComponent(typeName: string): void {
+        const cls = this.componentRegistry.get(typeName)
+        if (cls) {
+            this.componentTypeToName.delete(cls)
+            this.componentRegistry.delete(typeName)
+        }
     }
 
     /**
@@ -213,6 +250,104 @@ export class ECS {
     }
 
     /**
+     * Produce a JSON string snapshot of the current ECS state (entities + components + nextEntityId).
+     * Components must implement `toJSON()` instance method; their constructor should be registered
+     * with `registerComponent(typeName, Constructor)` so the loader can map type names back to classes.
+     */
+    public save(): string {
+        const snapshot: any = {
+            version: 1,
+            nextEntityId: this.nextEntityId,
+            entities: [] as any[],
+        }
+
+        for (const [id, container] of this.entities) {
+            const comps: any[] = []
+            for (const component of container.getAllComponents()) {
+                const ctor = (component as any).constructor as Function
+                const type = this.componentTypeToName.get(ctor) ?? (ctor as any).typeName ?? (ctor as any).name
+                if (typeof (component as any).toJSON !== 'function') {
+                    console.warn('Skipping non-serializable component', { entity: id, type })
+                    continue
+                }
+                const data = (component as any).toJSON()
+                comps.push({ type, data })
+            }
+            snapshot.entities.push({ id, components: comps })
+        }
+
+        return JSON.stringify(snapshot)
+    }
+
+    /**
+     * Load a snapshot previously produced by `save()`.
+     * If the snapshot contains unknown component types they will be skipped with a warning.
+     */
+    public load(serialized: string | object): void {
+        const snapshot = typeof serialized === 'string' ? JSON.parse(serialized) : serialized
+        const version = snapshot.version ?? 1
+        if (version !== 1) {
+            console.warn('Loading snapshot with unexpected version', { version })
+        }
+
+        // clear existing entities and reset system entity sets
+        this.entities.clear()
+        for (const system of this.systems.keys()) {
+            this.systems.set(system, new Set<Entity>())
+        }
+
+        this.nextEntityId = snapshot.nextEntityId ?? 0
+
+        // First pass: create containers for every entity id
+        for (const e of snapshot.entities ?? []) {
+            this.entities.set(e.id, new ComponentContainer(e.id, this))
+        }
+
+        // Second pass: instantiate components and add to containers
+        for (const e of snapshot.entities ?? []) {
+            const container = this.entities.get(e.id)!
+            for (const c of e.components ?? []) {
+                const cls = this.componentRegistry.get(c.type)
+                if (!cls) {
+                    console.warn('Unknown component type while loading; skipping', { type: c.type })
+                    continue
+                }
+
+                let comp: Component
+                if (typeof (cls as any).fromJSON === 'function') {
+                    comp = (cls as any).fromJSON(c.data, this, e.id)
+                } else {
+                    // best-effort: try to construct with the data as a single arg
+                    try {
+                        comp = new (cls as any)(c.data)
+                    } catch (err) {
+                        console.warn('Failed to construct component from data; skipping', { type: c.type, err })
+                        continue
+                    }
+                }
+
+                container.add(comp)
+            }
+
+            // update systems membership for this entity
+            this.checkE(e.id)
+        }
+
+        // Optional third pass: resolve references inside components that need it
+        for (const container of this.entities.values()) {
+            for (const comp of container.getAllComponents()) {
+                if (typeof (comp as any).resolveReferences === 'function') {
+                    try {
+                        (comp as any).resolveReferences(this)
+                    } catch (err) {
+                        console.warn('resolveReferences failed on component', { entity: container.entity, comp, err })
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Destroys an entity.
      * @param entity - Entity id to destroy.
      */
@@ -248,5 +383,15 @@ export class ECS {
         } else {
             this.systems.get(system)!.delete(entity)
         }
+    }
+
+    clear() {
+        this.entities.clear()
+        for (let entities of this.systems.values()) {
+            entities.clear()
+        }
+        this.nextEntityId = 0
+        this.systems.clear()
+        this.entitiesToDestroy = []
     }
 }

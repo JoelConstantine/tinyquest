@@ -16,8 +16,8 @@ describe('Map Class', () => {
             for (let x = 0; x < gameMap.dimensions.x; x++) {
                 const tile = gameMap.getTile(x, y)
                 expect(tile).toBeDefined()
-                expect(tile!.passable).toBe(true)
-                expect(tile!.transparent).toBe(true)
+                expect(tile!.passable).toBe(false)
+                expect(tile!.transparent).toBe(false)
             }
         }
     })

@@ -8,6 +8,6 @@ export default defineConfig({
         host: true
     },
     test: {
-        include: ['src/modules/__tests__/**/*.tests.ts'],
+        include: ['src/**/__tests__/**/*.tests.ts'],
     }
 })
