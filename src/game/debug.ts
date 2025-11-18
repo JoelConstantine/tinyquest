@@ -9,6 +9,13 @@
 //     update(_engine: Engine, _delta: number) { return this }
 // }
 
+/**
+ * Simple debug UI panel helper.
+ *
+ * Creates a DOM element that can be attached to the page for development
+ * debugging information. Use `useDebugPanel(elem)` to create and attach
+ * the panel easily.
+ */
 export class DebugPanel {
     elem!: HTMLElement
     init() {

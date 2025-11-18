@@ -15,29 +15,20 @@ export class Tile {
 
 /**
  * Represents a 2D grid of tiles.
- * Use the static method `GameMap.new` to create a new game map.
- * @class GameMap
+ *
+ * Use the static method `GameMap.new` to create and initialize a map.
  */
 export class GameMap {
-    /**
-     * The 2D array of tiles.
-     * @type {Tile[][]}
-     * @memberof GameMap
-     */
+    /** The 2D array of tiles. */
     tiles: Tile[][]
 
-    /**
-     * The dimensions of the map.
-     * @type {Vector2D}
-     * @memberof GameMap
-     */
+    /** The dimensions of the map. */
     dimensions: Vector2D
 
     /**
      * Private constructor for creating a new game map.
-     * @param {number} width - The width of the map.
-     * @param {number} height - The height of the map.
-     * @memberof GameMap
+     * @param width - The width of the map.
+     * @param height - The height of the map.
      */
     private constructor(width: number, height: number) {
         this.tiles = []
@@ -46,9 +37,8 @@ export class GameMap {
 
     /**
      * Initializes the game map by filling it with copies of the given tile.
-     * @param {Tile} [fillTyle] - Tile to fill the map with.
-     * @returns {GameMap} This game map.
-     * @memberof GameMap
+     * @param fillTile - Tile to fill the map with.
+     * @returns This game map.
      */
     init(fillTile: Tile = new Tile(0, 0)): GameMap {
         for (let y = 0; y < this.dimensions.y; y++) {
@@ -64,10 +54,9 @@ export class GameMap {
 
     /**
      * Checks if the given coordinates are within the bounds of the map.
-     * @param {number} x - The x coordinate.
-     * @param {number} y - The y coordinate.
-     * @returns {boolean} True if the coordinates are within the bounds of the map, false otherwise.
-     * @memberof GameMap
+     * @param x - The x coordinate.
+     * @param y - The y coordinate.
+     * @returns True if the coordinates are within bounds, false otherwise.
      */
     inBounds(x: number, y: number): boolean {
         return x >= 0 && x < this.dimensions.x && y >= 0 && y < this.dimensions.y
@@ -75,10 +64,9 @@ export class GameMap {
 
     /**
      * Gets a tile from the map at the given coordinates.
-     * @param {number} x - The x coordinate.
-     * @param {number} y - The y coordinate.
-     * @returns {(Tile | undefined)} The tile at the given coordinates, undefined if out of bounds.
-     * @memberof GameMap
+     * @param x - The x coordinate.
+     * @param y - The y coordinate.
+     * @returns The tile at the given coordinates, or `undefined` if out of bounds.
      */
     getTile(x: number, y: number): Tile | undefined {
         if (!this.inBounds(x, y)) return undefined
@@ -87,10 +75,9 @@ export class GameMap {
 
     /**
      * Sets a tile in the map at the given coordinates.
-     * @param {number} x - The x coordinate.
-     * @param {number} y - The y coordinate.
-     * @param {Tile} tile - The tile to set.
-     * @memberof GameMap
+     * @param x - The x coordinate.
+     * @param y - The y coordinate.
+     * @param tile - The tile to set.
      */
     setTile(x: number, y: number, tile: Tile) {
         this.tiles[y][x] = tile.copy()
@@ -98,11 +85,10 @@ export class GameMap {
 
     /**
      * Creates a new game map with the given dimensions and fills it with the given tile.
-     * @param {number} [width] - The width of the map.
-     * @param {number} [height] - The height of the map.
-     * @param {Tile} [fillTyle] - Tile to fill the map with.
-     * @returns {GameMap} The new game map.
-     * @memberof GameMap
+     * @param width - The width of the map.
+     * @param height - The height of the map.
+     * @param fillTile - Tile to fill the map with.
+     * @returns The new game map.
      */
     static new(width: number = 1, height: number = 1, fillTile?: Tile): GameMap {
         const map = new GameMap(width, height)

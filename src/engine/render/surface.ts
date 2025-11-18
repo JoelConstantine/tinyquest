@@ -1,6 +1,13 @@
 import { Vector2D } from "../utils";
 import type { Color } from "./color"
 
+/**
+ * Abstract drawable surface.
+ *
+ * Concrete implementations provide methods to draw primitives and images
+ * and manage an internal resolution. `CanvasSurface` is the browser-backed
+ * implementation using an HTMLCanvasElement.
+ */
 export abstract class Surface {
     public resolution: Vector2D = new Vector2D(0, 0)
 
@@ -14,6 +21,9 @@ export abstract class Surface {
     abstract clear(): void
 }
 
+/**
+ * Canvas-backed surface implementation.
+ */
 export class CanvasSurface extends Surface {
     private _canvas: HTMLCanvasElement
     private _ctx: CanvasRenderingContext2D

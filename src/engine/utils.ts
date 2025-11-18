@@ -1,6 +1,13 @@
 
 export type Point = [number, number]
 
+/**
+ * 2D vector utility.
+ *
+ * Small immutable-ish wrapper around a numeric `[x,y]` tuple exposing
+ * convenient getters/setters and utility methods used by maps, viewports and
+ * other geometry code.
+ */
 export class Vector2D {
     private point: Point
     constructor(x: number, y: number) { this.point = [x, y] }

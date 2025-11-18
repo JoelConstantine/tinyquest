@@ -1,6 +1,13 @@
 import { Color } from "./color"
 import { CanvasSurface } from "./surface"
 
+/**
+ * Viewport backed by a `CanvasSurface`.
+ *
+ * Responsible for holding a surface, background color and drawing the
+ * viewport contents. Provides helpers to attach the canvas to the DOM and
+ * to adjust resolution.
+ */
 export class CanvasViewport {
     public surface: CanvasSurface
     backgroundColor = new Color(0, 0, 0, 1)

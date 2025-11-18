@@ -18,8 +18,9 @@ export abstract class System {
     public abstract componentsRequired: Set<Function>
 
     /**
-     * Updates the entities that the system is aware of.
-     * @param entities - Set of entities that the system is aware of.
+        * Updates the entities that the system is aware of.
+        * @param delta - Time delta since last update (milliseconds).
+        * @param entities - Set of entities that the system is aware of.
      */
     public abstract update(delta: number,entities: Set<Entity>): void
 
@@ -31,7 +32,7 @@ export abstract class System {
 
 /**
  * Type alias for a component class.
- * @template T - Type of component.
+ * @typeParam T - Type of component.
  */
 export type ComponentClass<T extends Component> = new (...args: any[]) => T
 

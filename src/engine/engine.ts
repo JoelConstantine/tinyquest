@@ -1,21 +1,44 @@
+/**
+ * @packageDocumentation
+ * @document docs/engine-overview.md
+ */
+
 import { EventSystem } from "./events"
 import type { CanvasViewport } from "./render/viewport"
 import { NullScreen, type BaseScreen } from "./screen"
 
-
+/**
+ * Simple input manager placeholder.
+ *
+ * Replace or extend this class with real input handling (keyboard, mouse,
+ * gamepad) as needed for the game.
+ */
 export class InputManager {
-
 }
 
+
+/**
+ * Lightweight logger placeholder.
+ */
 export class Logger { }
 
 
-
+/**
+ * Abstract render engine interface.
+ *
+ * Concrete engines implement `draw` and `blank` to perform rendering each
+ * frame. The `Engine` composes a concrete `RenderEngine` to do actual
+ * drawing work.
+ */
 abstract class RenderEngine {
     abstract draw(delta?: number): void
     abstract blank(): void
 }
 
+
+/**
+ * Basic canvas-backed render engine.
+ */
 export class BasicCanvasEngine extends RenderEngine {
     viewport: CanvasViewport
     constructor(viewport: CanvasViewport) {
@@ -32,6 +55,12 @@ export class BasicCanvasEngine extends RenderEngine {
     }
 }
 
+/**
+ * Main engine that drives the game loop and manages the active screen.
+ *
+ * Holds references to input, rendering, event and logger subsystems and
+ * exposes `start()` to begin the animation loop.
+ */
 export class Engine {
     private _lastUpdated: number = 0
     private _screen: BaseScreen = new NullScreen()

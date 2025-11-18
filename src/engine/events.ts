@@ -1,3 +1,9 @@
+/**
+ * Lightweight pub/sub event system.
+ *
+ * Allows subscribing to named events and emitting them with arbitrary
+ * arguments. Subscribers are stored per-event name and invoked in order.
+ */
 export class EventSystem {
     public subscribers: Map<string, Function[]> = new Map<string, Function[]>();
 

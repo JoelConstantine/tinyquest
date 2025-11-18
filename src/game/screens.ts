@@ -2,6 +2,12 @@ import type { Engine } from "../engine/engine";
 import { BaseScreen } from "../engine/screen";
 import { GameMap } from "../modules/map";
 
+/**
+ * Main game screen implementation.
+ *
+ * Holds the `GameMap` instance and implements the lifecycle methods used by
+ * the `Engine` (`init`, `pause`, `resume`, `render`, `update`).
+ */
 export class GameScreen extends BaseScreen {
     map: GameMap | undefined
     init() {

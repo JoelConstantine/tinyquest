@@ -7,6 +7,13 @@ interface AssetLoader {
   loadAsset(url: string): Promise<Asset>;
 }
 
+/**
+ * Manager for asset loaders.
+ *
+ * Use `registerLoader` to register a loader for a particular asset type,
+ * and `loadAsset(url)` to load an asset by URL. The manager will select the
+ * appropriate loader based on the URL (or file extension) and delegate loading.
+ */
 export class AssetLoaderManager {
   private loaders: Map<string, AssetLoader>;
 
@@ -28,7 +35,7 @@ export class AssetLoaderManager {
     }
   }
 
-  private getTypeFromUrl(url: string): string {
+  private getTypeFromUrl(_url: string): string {
     // Implement logic to extract the asset type from the URL here
     // For example, if the URL is 'https://example.com/models/sphere.obj', 
     // you might return 'model'

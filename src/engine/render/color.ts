@@ -1,3 +1,9 @@
+/**
+ * Simple RGBA color utility.
+ *
+ * Provides numeric r/g/b/a channels and a `toString()` helper to produce
+ * CSS `rgba(...)` strings for canvas drawing.
+ */
 export class Color {
     r: number = 0
     g: number = 0

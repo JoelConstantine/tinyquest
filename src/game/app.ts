@@ -4,6 +4,12 @@ import { loadGameScreen } from "./screens";
 
 
 
+/**
+ * High level application entry point for the TinyQuest game.
+ *
+ * Responsible for wiring up the engine, attaching debug UI in development,
+ * loading the initial game screen, and starting the engine main loop.
+ */
 export class TinyQuest {
     private engine: Engine
     constructor(engine: Engine) { this.engine = engine }
