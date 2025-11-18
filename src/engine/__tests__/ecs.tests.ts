@@ -20,9 +20,6 @@ class Position extends Component {
 
 describe("ECS Component Operations", () => {
     const ecs = new ECS()
-    // beforeEach(() => {
-    //     ecs.clear()
-    // })
 
     it("adds and retrieve component", () => {
        
