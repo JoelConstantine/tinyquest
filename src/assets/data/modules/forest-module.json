@@ -1,0 +1,201 @@
+{
+    "meta": {
+        "name": "Forest Module",
+        "size": [16, 16]
+    },
+    "resources":[
+        "assets/images/tiny quest sprites.png"
+    ],
+    "appearances": {
+        "adventurer": {
+            "shortDesc": "An adventurer",
+            "longDesc": "An adventurer, fit for adventuring",
+            "character": "@",
+            "graphic": {
+                "resource":"assets/images/tiny quest sprites.png",
+                "size": [16, 16],
+                "location": [0, 0]
+            }
+        },
+        "dirt": {
+            "graphic": {
+                "resource":"assets/images/tiny quest sprites.png",
+                "size": [16, 16],
+                "location": [48, 16],
+                "variants": [
+                    [0, 16],
+                    [16, 16],
+                    [32, 16],
+                    [48, 16],
+                    [64, 16]
+                ]
+            }
+        },
+        "wornpath": {
+            "graphic": {
+                "resource":"assets/images/tiny quest sprites.png",
+                "size": [16, 16],
+                "location": [64, 16]
+
+            }
+        },
+        "path": {
+            "graphic": {
+                "resource":"assets/images/tiny quest sprites.png",
+                "size": [16, 16],
+                "location": [16, 32],
+                "variants": [
+                    [80, 16],
+                    [0, 32],
+                    [16, 32]
+                ]
+            }
+        },
+        "grass": {
+            "graphic": {
+                "resource":"assets/images/tiny quest sprites.png",
+                "size": [16, 16],
+                "location": [48, 48],
+                "variants": [
+                    [32, 32],
+                    [48, 32],
+                    [64, 32],
+                    [80, 32],
+                    [0, 48],
+                    [16, 48],
+                    [32, 48],
+                    [48, 48]
+                ]
+            }
+        },
+        "shortgrass": {
+            "graphic": {
+                "resource":"assets/images/tiny quest sprites.png",
+                "size": [16, 16],
+                "location": [64, 32],
+                "variants": [
+                    [32, 48],
+                    [48, 48]
+                ]
+            }
+        },
+        "tree": {
+            "graphic": {
+                "resource":"assets/images/tiny quest sprites.png",
+                "size": [16, 16],
+                "location": [80, 64],
+                "variants": [
+                    [64, 48],
+                    [80, 48],
+                    [32, 64],
+                    [80, 64]
+                ]
+            }
+        },
+        "doubletree": {
+            "graphic": {
+                "resource":"assets/images/tiny quest sprites.png",
+                "size": [16, 16],
+                "location": [80, 48],
+                "variants": [
+                    [80, 48],
+                    [48, 64]
+                ]
+            }
+        },
+        "deadtree": {
+            "graphic": {
+                "resource":"assets/images/tiny quest sprites.png",
+                "size": [16, 16],
+                "location": [16, 64],
+                "variants": [
+                    [0, 64],
+                    [16, 64],
+                    [64, 64]
+                ]
+            }
+        },
+        "yellowtree": {
+            "graphic": {
+                "resource":"assets/images/tiny quest sprites.png",
+                "size": [16, 16],
+                "location": [32,64],
+                "variants": [
+                    [32,64],
+                    [48, 64]
+                ]
+            }
+        },
+        "water": {
+            "graphic": {
+                "resource":"assets/images/tiny quest sprites.png",
+                "size": [16, 16],
+                "location": [0, 80],
+                "variants": [[16, 80]]
+            }
+        },
+        "deepwater": {
+            "graphic": {
+                "resource":"assets/images/tiny quest sprites.png",
+                "size": [16, 16],
+                "location": [32, 80]
+            }
+        },
+        "camp": {
+            "graphic": {
+                "resource":"assets/images/tiny quest sprites.png",
+                "size": [16, 16],
+                "location": [48, 80]
+            }
+        },
+        "camp-lit": {
+            "graphic": {
+                "resource":"assets/images/tiny quest sprites.png",
+                "size": [16, 16],
+                "location": [64, 80]
+            }
+        }
+    },
+    "tiles": [
+        {
+            "name": "dirt",
+            "passable": true,
+            "transparent": true,
+            "appearance": {
+                "lookslike": "dirt"
+            }
+        },
+        {
+            "name": "tree",
+            "passable": false,
+            "transparent": false,
+            "appearance": {
+                "lookslike": "tree"
+            }
+        },
+        {
+            "name": "grass",
+            "passable": true,
+            "transparent": true,
+            "appearance": {
+                "lookslike": "grass"
+            }
+        },
+        {
+            "name": "path",
+            "passable": true,
+            "transparent": true,
+            "appearance": {
+                "lookslike": "path"
+            }
+        },
+        {
+            "name": "water",
+            "passable": false,
+            "transparent": true,
+            "appearance": {
+                "lookslike": "water"
+            }
+        }
+    ]
+}
