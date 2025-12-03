@@ -2,14 +2,70 @@ import { Vector2D } from "../engine/utils"
 
 export class Tile {
     position: Vector2D = new Vector2D(0, 0)
-    passable: boolean = false
-    transparent: boolean = false
-    constructor(x: number, y: number) { this.position.x = x; this.position.y = y }
+    passable: boolean
+    transparent: boolean
+    constructor(x: number, y: number, passable: boolean = false, transparent: boolean = false) { 
+        this.position.set(x, y)
+        this.passable = passable
+        this.transparent = transparent
+    }
+
+    becomeTile(tile: Tile) {
+        this.passable = tile.passable
+        this.transparent = tile.transparent
+    }
+
     copy(): Tile {
         const tile = new Tile(this.position.x, this.position.y)
         tile.passable = this.passable
         tile.transparent = this.transparent
         return tile
+    }
+}
+
+const blankTile = new Tile(0, 0, false, false)
+
+class Terrain {
+    tiles: Array<Tile | null>
+    dimensions: Vector2D
+    fillTile: Tile = new Tile(0, 0)
+    constructor(width: number, height: number, fillTile?: Tile) {
+        this.tiles = []
+        this.dimensions = new Vector2D(width, height)
+        if (fillTile) this.fillTile = fillTile
+    }
+
+    setTile(newTile: Tile, x: number, y: number) {
+        let tile = this.getTile(x, y)
+        if (!tile) { 
+            tile = blankTile.copy()
+            this.tiles[y * this.dimensions.x + x] = tile
+        }
+        tile.becomeTile(newTile)
+        tile.position.set(x, y)
+    }
+
+    getTile(x: number, y: number): Tile | null {
+        if (!this.inBounds(x, y)) return null
+        return this.tiles[y * this.dimensions.x + x]
+    }
+
+    inBounds(x: number, y: number): boolean {
+        return x >= 0 && x < this.dimensions.x && y >= 0 && y < this.dimensions.y
+    }
+
+    static new(width: number, height: number): Terrain {
+        const terrain = new Terrain(width, height)
+      
+        return terrain
+    }
+
+    init() {
+        for (let y = 0; y < this.dimensions.y; y++) {
+            for (let x = 0; x < this.dimensions.x; x++) {
+                this.setTile(this.fillTile, x, y)
+            }
+        }
     }
 }
 
@@ -20,8 +76,7 @@ export class Tile {
  */
 export class GameMap {
     /** The 2D array of tiles. */
-    tiles: Tile[][]
-
+    terrain: Terrain
     /** The dimensions of the map. */
     dimensions: Vector2D
 
@@ -31,8 +86,8 @@ export class GameMap {
      * @param height - The height of the map.
      */
     private constructor(width: number, height: number) {
-        this.tiles = []
         this.dimensions = new Vector2D(width, height)
+        this.terrain = Terrain.new(width, height)
     }
 
     /**
@@ -40,15 +95,8 @@ export class GameMap {
      * @param fillTile - Tile to fill the map with.
      * @returns This game map.
      */
-    init(fillTile: Tile = new Tile(0, 0)): GameMap {
-        for (let y = 0; y < this.dimensions.y; y++) {
-            this.tiles[y] = []
-            for (let x = 0; x < this.dimensions.x; x++) {
-                const tile = fillTile.copy()
-                tile.position.set(x, y)
-                this.tiles[y][x] = tile
-            }
-        }
+    init(): GameMap {
+        this.terrain.init()
         return this
     }
 
@@ -70,7 +118,7 @@ export class GameMap {
      */
     getTile(x: number, y: number): Tile | undefined {
         if (!this.inBounds(x, y)) return undefined
-        return this.tiles[y][x]
+        return this.terrain.getTile(x, y) || undefined
     }
 
     /**
@@ -80,7 +128,7 @@ export class GameMap {
      * @param tile - The tile to set.
      */
     setTile(x: number, y: number, tile: Tile) {
-        this.tiles[y][x] = tile.copy()
+        this.terrain.setTile(tile.copy(), x, y)
     }
 
     /**
@@ -90,9 +138,9 @@ export class GameMap {
      * @param fillTile - Tile to fill the map with.
      * @returns The new game map.
      */
-    static new(width: number = 1, height: number = 1, fillTile?: Tile): GameMap {
+    static new(width: number = 1, height: number = 1): GameMap {
         const map = new GameMap(width, height)
        
-        return map.init(fillTile)
+        return map.init()
     }
 }

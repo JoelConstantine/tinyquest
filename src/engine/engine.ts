@@ -79,9 +79,12 @@ export class Engine {
     }
 
     update(delta: number = 0) {
+        // Update the current screen
         const screen = this._screen.update(this, delta)
         if (screen !== this._screen) this.changeScreen(screen)
         this._screen.render(this)
+
+        // Draw the frame
         requestAnimationFrame((timeStamp) => {
             const delta = timeStamp - this._lastUpdated
             this._lastUpdated = timeStamp 

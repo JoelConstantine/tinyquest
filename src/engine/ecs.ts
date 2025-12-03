@@ -28,6 +28,8 @@ export abstract class System {
      * ECS instance associated with the system.
      */
     public ecs!: ECS
+
+    public clear(): void {}
 }
 
 /**
@@ -392,7 +394,9 @@ export class ECS {
             entities.clear()
         }
         this.nextEntityId = 0
-        this.systems.clear()
+        for (const system of this.systems.keys()) {
+            system.clear()
+        }
         this.entitiesToDestroy = []
     }
 }

@@ -14,6 +14,7 @@ export class EventSystem {
 
     public unsubscribe(event: string, callback: Function) {
         if (!this.subscribers.has(event)) return;
+        if (!this.subscribers.get(event)?.includes(callback)) return;
         this.subscribers.get(event)?.splice(this.subscribers.get(event)!.indexOf(callback), 1);
     }
 
