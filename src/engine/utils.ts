@@ -1,6 +1,7 @@
 
 export type Point = [number, number]
 
+export type Dimensions = [number, number, number, number]
 /**
  * 2D vector utility.
  *

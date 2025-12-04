@@ -2,8 +2,6 @@ import type { Engine } from "../engine/engine";
 import { useDebugPanel } from "./debug";
 import { loadGameScreen } from "./screens";
 
-
-
 /**
  * High level application entry point for the TinyQuest game.
  *

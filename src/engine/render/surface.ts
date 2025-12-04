@@ -10,10 +10,12 @@ import type { Color } from "./color"
  */
 export abstract class Surface {
     public resolution: Vector2D = new Vector2D(0, 0)
+    abstract ctx: CanvasRenderingContext2D
 
     constructor(width: number, height: number) { this.resolution.x = width; this.resolution.y = height }
 
     adjustResolution(width: number, height: number) { this.resolution.x = width; this.resolution.y = height }
+
 
     abstract drawRect(x: number, y: number, width: number, height: number, color: Color): void
     abstract drawPoint(x: number, y: number, color: Color): void

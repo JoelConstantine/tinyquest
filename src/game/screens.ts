@@ -28,3 +28,14 @@ export const loadGameScreen = () => {
     
     return screen
 }
+
+class MainMenuScreen extends BaseScreen {
+    init() { return this }  
+    pause() { return this }
+    resume() { return this }
+    render(engine: Engine) {
+        engine.render.blank()
+        return this
+    }
+    update() { return this }
+}
