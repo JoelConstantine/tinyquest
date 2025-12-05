@@ -17,7 +17,7 @@ export abstract class Surface {
     adjustResolution(width: number, height: number) { this.resolution.x = width; this.resolution.y = height }
 
 
-    abstract drawRect(x: number, y: number, width: number, height: number, color: Color): void
+    abstract drawRect(x: number, y: number, width: number, height: number, color: Color | string): void
     abstract drawPoint(x: number, y: number, color: Color): void
     abstract drawImage(image: HTMLImageElement, x: number, y: number): void
     abstract clear(): void
@@ -27,8 +27,8 @@ export abstract class Surface {
  * Canvas-backed surface implementation.
  */
 export class CanvasSurface extends Surface {
-    private _canvas: HTMLCanvasElement
-    private _ctx: CanvasRenderingContext2D
+    readonly canvas: HTMLCanvasElement
+    ctx: CanvasRenderingContext2D
 
     constructor(
         canvas: HTMLCanvasElement,
@@ -37,22 +37,15 @@ export class CanvasSurface extends Surface {
         height: number,
         ) {
         super(width, height)
-        this._canvas = canvas
-        this._ctx = context
-    }
-
-    get canvas(): HTMLCanvasElement {
-        return this._canvas
-    }
-
-    get ctx(): CanvasRenderingContext2D {
-        return this._ctx
+        this.canvas = canvas
+        this.ctx = context
     }
 
     public static new(width: number, height: number): CanvasSurface {
         const canvas = document.createElement('canvas')
         const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
-    
+        // disable pixel smoothing
+        ctx.imageSmoothingEnabled = false
         return new CanvasSurface(canvas, ctx, width, height)
     }
 
@@ -64,20 +57,31 @@ export class CanvasSurface extends Surface {
     }
 
     clear() {
-        this._ctx.clearRect(0, 0, this.resolution.x, this.resolution.y)
+        this.ctx.clearRect(0, 0, this.resolution.x, this.resolution.y)
     }
 
     drawPoint(x: number, y: number, color: Color) {
-        this._ctx.fillStyle = color.toString()
-        this._ctx.fillRect(x, y, 1, 1)
+        this.ctx.fillStyle = color.toString()
+        this.ctx.fillRect(x, y, 1, 1)
     }
 
     drawImage(image: HTMLImageElement, x: number, y: number) {
-        this._ctx.drawImage(image, x, y)
+        this.ctx.drawImage(image, x, y)
     }
 
-    drawRect(x: number, y: number, width: number, height: number, color: Color) {
-        this._ctx.fillStyle = color.toString()
-        this._ctx.fillRect(x, y, width, height)
+    drawRect(x: number, y: number, width: number, height: number, color: Color | string, filled: boolean = true) {
+        if (filled) {
+            this.ctx.fillStyle = color.toString()
+            this.ctx.fillRect(x, y, width, height)
+            return
+        }
+        this.ctx.strokeStyle = color.toString()
+        this.ctx.strokeRect(x, y, width, height)
+    }
+
+    adjustResolution(width: number, height: number) {
+        super.adjustResolution(width, height)
+        this.canvas.width = width
+        this.canvas.height = height
     }
 }

@@ -1,20 +1,44 @@
+/**
+ * @packageDocumentation
+ * Game map and tile system for dungeon/grid-based navigation.
+ */
+
 import { Vector2D } from "../engine/utils"
 
+/**
+ * Represents a single tile in a game map.
+ * Stores position, passability, and transparency properties.
+ */
 export class Tile {
     position: Vector2D = new Vector2D(0, 0)
     passable: boolean
     transparent: boolean
+    /**
+     * Creates a new tile at the specified coordinates.
+     * @param x - X position of the tile.
+     * @param y - Y position of the tile.
+     * @param passable - Whether the tile can be walked through.
+     * @param transparent - Whether the tile allows light to pass through.
+     */
     constructor(x: number, y: number, passable: boolean = false, transparent: boolean = false) { 
         this.position.set(x, y)
         this.passable = passable
         this.transparent = transparent
     }
 
+    /**
+     * Copies properties from another tile to this one.
+     * @param tile - Source tile to copy from.
+     */
     becomeTile(tile: Tile) {
         this.passable = tile.passable
         this.transparent = tile.transparent
     }
 
+    /**
+     * Creates a deep copy of this tile.
+     * @returns A new tile with the same properties.
+     */
     copy(): Tile {
         const tile = new Tile(this.position.x, this.position.y)
         tile.passable = this.passable
@@ -25,16 +49,32 @@ export class Tile {
 
 const blankTile = new Tile(0, 0, false, false)
 
+/**
+ * Internal terrain data structure managing a 2D array of tiles.
+ * Handles tile storage, retrieval, and boundary checking.
+ */
 class Terrain {
     tiles: Array<Tile | null>
     dimensions: Vector2D
     fillTile: Tile = new Tile(0, 0)
+    /**
+     * Creates a new terrain with the specified dimensions.
+     * @param width - Width of the terrain.
+     * @param height - Height of the terrain.
+     * @param fillTile - Optional tile to use as default fill.
+     */
     constructor(width: number, height: number, fillTile?: Tile) {
         this.tiles = []
         this.dimensions = new Vector2D(width, height)
         if (fillTile) this.fillTile = fillTile
     }
 
+    /**
+     * Sets a tile at the specified coordinates.
+     * @param newTile - The tile to set.
+     * @param x - X coordinate.
+     * @param y - Y coordinate.
+     */
     setTile(newTile: Tile, x: number, y: number) {
         let tile = this.getTile(x, y)
         if (!tile) { 
@@ -45,21 +85,42 @@ class Terrain {
         tile.position.set(x, y)
     }
 
+    /**
+     * Gets a tile at the specified coordinates.
+     * @param x - X coordinate.
+     * @param y - Y coordinate.
+     * @returns The tile at the coordinates, or null if out of bounds.
+     */
     getTile(x: number, y: number): Tile | null {
         if (!this.inBounds(x, y)) return null
         return this.tiles[y * this.dimensions.x + x]
     }
 
+    /**
+     * Checks if coordinates are within terrain bounds.
+     * @param x - X coordinate.
+     * @param y - Y coordinate.
+     * @returns True if within bounds, false otherwise.
+     */
     inBounds(x: number, y: number): boolean {
         return x >= 0 && x < this.dimensions.x && y >= 0 && y < this.dimensions.y
     }
 
+    /**
+     * Creates and initializes a new terrain with the specified dimensions.
+     * @param width - Width of the terrain.
+     * @param height - Height of the terrain.
+     * @returns A new terrain instance.
+     */
     static new(width: number, height: number): Terrain {
         const terrain = new Terrain(width, height)
       
         return terrain
     }
 
+    /**
+     * Fills the entire terrain with the fill tile.
+     */
     init() {
         for (let y = 0; y < this.dimensions.y; y++) {
             for (let x = 0; x < this.dimensions.x; x++) {

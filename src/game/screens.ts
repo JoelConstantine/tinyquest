@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ * Game screens and UI implementations for different game states.
+ */
+
 import type { Engine } from "../engine/engine";
 import { BaseScreen } from "../engine/screen";
 import { GameMap } from "../modules/map";
@@ -23,13 +28,21 @@ export class GameScreen extends BaseScreen {
     update() { return this }
 }
 
+/**
+ * Factory function to create and initialize a game screen.
+ * @returns An initialized GameScreen instance.
+ */
 export const loadGameScreen = () => {
     const screen = new GameScreen().init()
     
     return screen
 }
 
-class MainMenuScreen extends BaseScreen {
+/**
+ * Main menu screen implementation.
+ * Serves as the starting screen for the game.
+ */
+export class MainMenuScreen extends BaseScreen {
     init() { return this }  
     pause() { return this }
     resume() { return this }

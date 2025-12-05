@@ -1,9 +1,17 @@
+/**
+ * @packageDocumentation
+ * Sprite and graphics rendering utilities for drawing textured objects.
+ */
+
 import type { Surface } from "../render/surface";
 import { Vector2D, type Dimensions } from "../utils";
 import { GraphicsObject } from "./container";
 import type { Texture } from "./texture";
 
-
+/**
+ * Rectangle graphics object with width and height properties.
+ * Base class for drawable rectangular objects.
+ */
 class RectGraphics extends GraphicsObject {
   dimensions: Vector2D
   centered: boolean = true
@@ -16,9 +24,18 @@ class RectGraphics extends GraphicsObject {
   }
 }
 
+/**
+ * A drawable sprite that renders a portion of a texture to the screen.
+ * Supports positioning, dimensions, and texture source rectangles.
+ */
 export class Sprite extends RectGraphics {
   _textureLocation: Dimensions
   _texture: Texture
+  /**
+   * Creates a new sprite.
+   * @param texture - The texture to render.
+   * @param dimensions - [sourceX, sourceY, sourceWidth, sourceHeight] portion of the texture to display.
+   */
   constructor(texture: Texture, dimensions: Dimensions = [0, 0, 16, 16]) {
     super(dimensions[2], dimensions[3])
     this._texture = texture
@@ -42,7 +59,7 @@ export class Sprite extends RectGraphics {
     )
   }
 
-  static new(texture: Texture, dimensions: Dimensions): Sprite {
+  static new(texture: Texture, _dimensions: Dimensions): Sprite {
     return new Sprite(texture)
   }
 

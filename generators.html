@@ -33,24 +33,12 @@
         }
       }
 
-      #dungeons {
-        display: flex;
-        gap: 4px;
-        flex-wrap: wrap;
-        margin-bottom: 4px;
-        justify-content: center;
-
-        > div {
-          width: fit-content;
-          line-height: 0;
+      .canvas-display {
+        canvas {
+          border: 2px solid black;
+          width: 100%;
+          image-rendering: pixelated;
         }
-      }
-
-      #forest-map {
-        > canvas {
-          max-width: 100%;
-        }
-        max-width: 100%;
       }
 
       .toolbar {
@@ -61,16 +49,14 @@
     </style>
   </head>
   <body class="flex-col align-center breakout-grid">
-    <section id="dungeons" class="">
-      <div id="debug-info"></div>
-      <div id="work-maze"></div>
-      
+    <section class="canvas-display">
+      <canvas id="rooms-and-mazes"></canvas>
     </section>
     <section class="full-width" >
       <div id="forest-map" class="full-width"></div>
     </section>
 
     <!-- <script type="module" src="mazes.ts"></script> -->
-    <script type="module" src="dungeons.ts"></script>
+    <script type="module" src="src/generators.ts"></script>
   </body>
 </html>

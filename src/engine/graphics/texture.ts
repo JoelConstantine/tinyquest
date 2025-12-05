@@ -1,3 +1,12 @@
+/**
+ * @packageDocumentation
+ * Image texture loading and management.
+ */
+
+/**
+ * Represents a loaded image texture with lazy loading support.
+ * Images are loaded asynchronously and accessed via the `image` getter.
+ */
 export class Texture {
   readonly url: string
   private _img!: HTMLImageElement

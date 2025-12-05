@@ -1,10 +1,10 @@
 {
   "entryPoints": ["src/engine", "src/modules"],
-  "tsconfig": "tsconfig.json",
+  "tsconfig": "tsconfig.typedoc.json",
   "out": "dist/docs",
   "entryPointStrategy": "expand",
   "excludeExternals": true,
   "includeVersion": true,
-  "exclude": ["**/__tests__/**"],
+  "exclude": ["**/__tests__/**", "**/*.spec.ts"],
   "hideGenerator": false
 }
