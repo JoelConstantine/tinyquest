@@ -2,9 +2,9 @@
  * @packageDocumentation
  * Maze generation using depth-first search with backtracking (recursive backtracker algorithm).
  */
-
 import type { Grid, Cell } from "./grid";
-import { type IBuilder, gridLogger } from "./roomBuilder";
+import { type IBuilder } from "./builders";
+import { gridLogger } from "./roomBuilder";
 
 /**
  * Generates a maze by carving passages through a grid using the recursive backtracker algorithm.

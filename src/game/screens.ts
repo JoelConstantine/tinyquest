@@ -3,6 +3,7 @@
  * Game screens and UI implementations for different game states.
  */
 
+import { ECS } from "../engine/ecs";
 import type { Engine } from "../engine/engine";
 import { BaseScreen } from "../engine/screen";
 import { GameMap } from "../modules/map";
@@ -14,9 +15,18 @@ import { GameMap } from "../modules/map";
  * the `Engine` (`init`, `pause`, `resume`, `render`, `update`).
  */
 export class GameScreen extends BaseScreen {
-    map: GameMap | undefined
-    init() {
+    map: GameMap
+    ecs: ECS
+    constructor() {
+        super()
         this.map = GameMap.new(30,30)
+        this.ecs = new ECS()
+    }
+    init() {
+        // add the player entity
+        const player = this.ecs.addEntity()
+        this.map.init()
+
         return this
     }
     pause() { return this }

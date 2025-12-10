@@ -1,19 +1,36 @@
-import { Rect } from "../../engine/utils";
+import { Rect } from "../../../engine/utils";
+import type { IGridBuilder } from "./builders";
 import { Grid, Cell } from "./grid";
-
-export interface IBuilder {
-  grid: Grid;
-  build(): Grid;
-  step(): boolean;
-}
 
 export class BuilderCell extends Cell {
   visited: boolean = false
+  room!: Room
   constructor(x: number, y: number) {
     super(x, y,)
   }
   static new(x: number, y: number) {
     return new BuilderCell(x, y)
+  }
+
+  breakWall(direction: [number, number]) {
+    const dx = direction[0]
+    const dy = direction[1]
+
+    if (dx === 1) {
+      this.walls.right = false
+    } else if (dx === -1) {
+      this.walls.left = false
+    }
+    
+    if (dy === 1) {
+      this.walls.bottom = false;
+    } else if (dy === -1) {
+      this.walls.top = false;
+    }
+  }
+
+  copy() {
+    return new BuilderCell(this.x, this.y)
   }
 }
 
@@ -40,15 +57,33 @@ const roomOptionsDefaults: RoomBuilderOptions = {
   maxRoomHeight: 5,
   maxAttempts: 50
 };
-class Room extends Rect {
+export class Room extends Rect {
   cells: BuilderCell[] = [];
+  exits: Set<BuilderCell> = new Set()
 
   constructor(x: number, y: number, width: number, height: number) {
     super(x, y, width, height);
   }
 
-  addCell(cell: Cell) {
+  addCell(cell: BuilderCell) {
+    cell.room = this
     this.cells.push(cell);
+  }
+
+  getBorders(): BuilderCell[] {
+      const borderCells: BuilderCell[] = []
+      for (const cell of this.cells) {
+          if (cell.x === this.x || cell.x === this.x + this.width - 1 || cell.y === this.y || cell.y === this.y + this.height - 1) {
+              borderCells.push(cell)
+          }
+      }
+
+      return borderCells
+  }
+
+  addExit(cell: BuilderCell) {
+    this.exits.add(cell)
+    this.addCell(cell)
   }
 }
 
@@ -60,7 +95,7 @@ const generateRandomRoom = (grid: Grid, minWidth: number, minHeight: number, max
   return new Room(x, y, width, height);
 };
 
-export class RoomBuilder implements IBuilder {
+export class RoomBuilder implements IGridBuilder {
   grid: Grid;
   minRoomWidth: number;
   minRoomHeight: number;
@@ -68,7 +103,7 @@ export class RoomBuilder implements IBuilder {
   maxRoomHeight: number;
   maxAttempts: number;
   protected attempts: number = 0;
-  protected rooms: Room[] = [];
+  readonly rooms: Room[] = [];
   constructor(
     grid: Grid,
     minRoomWidth: number,

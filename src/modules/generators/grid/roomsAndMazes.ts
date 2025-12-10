@@ -1,8 +1,9 @@
+import type { IGridBuilder } from "./builders";
 import { Grid } from "./grid";
-import { MazeBuilder } from "./MazeBuilder";
-import { BuilderCell, type IBuilder, RoomBuilder } from "./roomBuilder";
+import { MazeBuilder } from "./mazeBuilder";
+import { BuilderCell, RoomBuilder } from "./roomBuilder";
 
-export class RoomsAndMazes implements IBuilder {
+export class RoomsAndMazes implements IGridBuilder {
   roomBuilder: RoomBuilder
   mazeBuilder: MazeBuilder
   grid: Grid
@@ -45,7 +46,7 @@ export const useRoomsAndMazes = (width: number, height: number, options?: RoomsA
     maxAttempts: options?.maxAttempts ?? 200
   }
 
-  const grid = Grid.new(width, height).fill(new BuilderCell(0,0));
+  const grid = Grid.new<BuilderCell>(width, height).fill(new BuilderCell(0,0));
   const roomBuilder = RoomBuilder.new(grid, roomOptions);
   const mazeBuilder = new MazeBuilder(grid);
   const generator = new RoomsAndMazes(grid, roomBuilder, mazeBuilder);

@@ -48,8 +48,8 @@ export class Cell {
  * A 2D grid of cells used for procedural generation algorithms.
  * Manages cell storage, retrieval, and boundary checking.
  */
-export class Grid {
-  cells: Cell[] = []
+export class Grid<T extends Cell = Cell> {
+  cells: T[] = []
   width: number
   height: number
   /**
@@ -66,34 +66,34 @@ export class Grid {
     return x >= 0 && x < this.width && y >= 0 && y < this.height
   }
 
-  getCell(x: number, y: number): Cell | null {
+  getCell(x: number, y: number): T | null {
     if (!this.isInBounds(x, y)) return null
-    return this.cells[y * this.width + x] || null
+    return this.cells[y * this.width + x] as T || null
   }
 
-  setCell(x: number, y: number, value: Cell): void {
+  setCell(x: number, y: number, value: T): void {
     if (this.isInBounds(x, y)) {
       this.cells[y * this.width + x] = value
     }
   }
 
-  init() {
-    this.fill(new Cell(0, 0))
+  init(): this {
+    this.fill(new Cell(0, 0) as T)
     return this
   }
 
-  fill(fillCell: Cell) {
+  fill(fillCell: T): this {
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
         const cell = fillCell.copy()
         cell.x = x
         cell.y = y 
-        this.setCell(x, y, cell)
+        this.setCell(x, y, cell as T)
       }
     }
     return this
   }
-  static new(width: number, height: number): Grid {
-    return new Grid(width, height).init()
+  static new<T extends Cell = Cell>(width: number, height: number): Grid<T> {
+    return new Grid<T>(width, height).init()
   }
 }

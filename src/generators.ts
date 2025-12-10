@@ -1,24 +1,22 @@
 import { CanvasSurface, Surface } from "./engine/render/surface"
 import { Toolbar } from "./modules/components"
-import { useRoomsAndMazes } from "./modules/generators/roomsAndMazes"
-import { type IBuilder } from "./modules/generators/roomBuilder"
+import { useRoomsAndMazes } from "./modules/generators/grid/roomsAndMazes"
+import type { Grid } from "./modules/generators/grid/grid"
+import { useForestGenerator } from "./modules/generators/forestGenerator"
+import type { Room } from "./modules/generators/grid/roomBuilder"
 
 class DisplayMaze {
-    surface: Surface
-    builder: IBuilder
-    constructor(surface: Surface, builder: IBuilder) {
+    surface: CanvasSurface
+    constructor(surface: CanvasSurface) {
         this.surface = surface
-        this.builder = builder
     }
 
-    initialize() {
-       const grid = this.builder.grid
+    initialize(grid: Grid) {
         this.surface.adjustResolution(grid.width * 14, grid.height * 14)
         this.surface.drawRect(0, 0, this.surface.resolution.x, this.surface.resolution.y, '#000000')
     }
 
-    draw() {
-        const grid = this.builder.grid
+    draw(grid: Grid) {
         for (let y = 0; y < grid.height; y++) {
             for (let x = 0; x < grid.width; x++) {
                 const cell = grid.getCell(x, y)
@@ -42,41 +40,76 @@ class DisplayMaze {
             }
         }
     }
+
+    drawRooms(rooms: Room[]) {
+        for(const room of rooms) {
+            for (const cell of room.cells) {
+                const px = cell.x * 14
+                const py = cell.y * 14
+
+                this.surface.drawRect(px, py, 14, 14, '#60a267ff')
+
+                if (cell.walls.top) {
+                    this.surface.drawRect(px, py, 14, 1, 'rgba(29, 46, 37, 1)')
+                }
+                if (cell.walls.right) {
+                    this.surface.drawRect(px + 13, py, 1, 14, 'rgba(29, 46, 37, 1)')
+                }
+                if (cell.walls.bottom) {
+                    this.surface.drawRect(px, py + 13, 14, 1, 'rgba(29, 46, 37, 1)')
+                }
+                if (cell.walls.left) {
+                    this.surface.drawRect(px, py, 1, 14, 'rgba(29, 46, 37, 1)')
+                }
+            }
+        }
+    }
 }
 
 async function main() {
     //const tilesetData = await Resources.loadJson<TilesetData>('/data/tilesets/forest-module.json')
     //createAppearances(tilesetData.appearances)
     
-  const surface = CanvasSurface.from('rooms-and-mazes')
-  const generator = useRoomsAndMazes(50, 50, {
-    minRoomWidth: 1,
-    minRoomHeight: 1,
-    maxRoomWidth: 5,
-    maxRoomHeight: 5,
-    maxAttempts: 60,
-  })
+    const surface = CanvasSurface.from('rooms-and-mazes')
+    const generator = useRoomsAndMazes(40, 40, {
+        minRoomWidth: 1,
+        minRoomHeight: 1,
+        maxRoomWidth: 5,
+        maxRoomHeight: 5,
+        maxAttempts: 60,
+    })
 
-  const displayMaze = new DisplayMaze(surface, generator)
-  displayMaze.initialize()
+    const forestGenerator = useForestGenerator(80, 80, {
+        rooms: {
+            minRoomWidth: 2,
+            minRoomHeight: 2,
+            maxRoomWidth: 8,
+            maxRoomHeight: 8,
+            maxAttempts: 60,
+        }
+    }) 
+
+    const displayMaze = new DisplayMaze(surface)
+    displayMaze.initialize(generator.grid)
 
     const toolbar = new Toolbar(document.body)
 
     function tick() {
         const working = generator.step()
-        displayMaze.draw()
+        displayMaze.draw(generator.grid)
 
         if (working) window.requestAnimationFrame(tick)
     }
 
     toolbar
         .addAction("Generate", () => {
-            generator.build()
-            displayMaze.draw()
+            const forest = forestGenerator.build()
+            displayMaze.draw(forest.grid)
+            //displayMaze.drawRooms(forest.rooms)
         })
         .addAction("Step", () => {
             generator.step()
-            displayMaze.draw()
+            displayMaze.draw(generator.grid)
         })
         .addAction('Watch Generation', () => {
             // generator.start()
