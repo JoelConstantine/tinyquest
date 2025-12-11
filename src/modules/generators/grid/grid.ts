@@ -11,7 +11,6 @@ export class Cell {
   x: number
   y: number
   walls: { top: boolean; right: boolean; bottom: boolean; left: boolean }
-  visited: boolean
 
   /**
    * Creates a new grid cell.
@@ -22,8 +21,9 @@ export class Cell {
     this.x = x
     this.y = y
     this.walls = { top: false, right: false, bottom: false, left: false }
-    this.visited = false
   }
+
+  get wallCount(): number { return Object.values(this.walls).filter(wall => wall).length }
 
   /**
    * Static factory method to create a cell.
@@ -40,7 +40,8 @@ export class Cell {
    * @returns A new cell with the same coordinates.
    */
   copy() {
-    return new Cell(this.x, this.y)
+    // @ts-ignore
+    return new this.constructor(this.x, this.y)
   }
 }
 
@@ -49,7 +50,7 @@ export class Cell {
  * Manages cell storage, retrieval, and boundary checking.
  */
 export class Grid<T extends Cell = Cell> {
-  cells: T[] = []
+  cells: Array<T | null> = []
   width: number
   height: number
   /**
@@ -66,19 +67,19 @@ export class Grid<T extends Cell = Cell> {
     return x >= 0 && x < this.width && y >= 0 && y < this.height
   }
 
-  getCell(x: number, y: number): T | null {
-    if (!this.isInBounds(x, y)) return null
-    return this.cells[y * this.width + x] as T || null
+  getCell(x: number, y: number): T | null | undefined {
+    if (!this.isInBounds(x, y)) return undefined
+    return this.cells[y * this.width + x]
   }
 
-  setCell(x: number, y: number, value: T): void {
+  setCell(x: number, y: number, value: T | null): void {
     if (this.isInBounds(x, y)) {
       this.cells[y * this.width + x] = value
     }
   }
 
   init(): this {
-    this.fill(new Cell(0, 0) as T)
+    this.cells = new Array(this.width * this.height).fill(null)
     return this
   }
 

@@ -4,7 +4,7 @@
  */
 import type { Grid, Cell } from "./grid";
 import { type IBuilder } from "./builders";
-import { gridLogger } from "./roomBuilder";
+import { BuilderCell, gridLogger } from "./roomBuilder";
 
 /**
  * Generates a maze by carving passages through a grid using the recursive backtracker algorithm.
@@ -19,30 +19,41 @@ import { gridLogger } from "./roomBuilder";
  */
 export class MazeBuilder implements IBuilder {
   grid: Grid;
-  unvisited: Cell[] = [];
   currentCell: Cell | null = null;
   stack: Cell[] = [];
+  maze: Set<Cell> = new Set();
   /**
    * Creates a new maze builder for the given grid.
    * @param grid - The grid to carve a maze into.
    */
   constructor(grid: Grid) {
     this.grid = grid;
-    this.unvisited = this.grid.cells.filter(c => c.visited === false);
+    this.init()
+  }
+
+  init() {
+
   }
 
   /**
    * Randomly selects an unvisited cell from the unvisited list and removes it.
    * @returns A randomly selected unvisited cell, or null if none remain.
    */
-  findUnvisitedCell(): Cell | null {
-    if (this.unvisited.length === 0) {
-      return null;
+  findUnvisitedCell(attempts = 0): Cell | null {
+    if (attempts >= this.grid.cells.length) return null
+    const x = Math.floor(Math.random() * this.grid.width);
+    const y = Math.floor(Math.random() * this.grid.height);
+
+    const cell = this.grid.getCell(x, y);
+    if (cell === undefined) return null
+    if (cell === null) {
+      const cell = new BuilderCell(x, y)
+      this.grid.setCell(x, y, cell);
+      return cell
     }
-    const index = Math.floor(Math.random() * this.unvisited.length);
-    const cell = this.unvisited[index];
-    this.unvisited = this.unvisited.filter(c => c !== cell);
-    return cell || null;
+
+    const nextCell = this.findUnvisitedCell(attempts++)
+    return nextCell
   }
 
   /**
@@ -52,7 +63,7 @@ export class MazeBuilder implements IBuilder {
    * @returns A random unvisited neighbor, or undefined if none exist.
    */
   getUnvisitedNeighbor(cell: Cell): Cell | undefined {
-    const neighbors: Cell[] = [];
+    const neighbors = [];
     const directions = [
       { dx: 0, dy: -1 }, // top
       { dx: 1, dy: 0 }, // right
@@ -61,12 +72,23 @@ export class MazeBuilder implements IBuilder {
     ];
     for (const dir of directions) {
       const neighbor = this.grid.getCell(cell.x + dir.dx, cell.y + dir.dy);
-      if (neighbor && !neighbor.visited) {
-        neighbors.push(neighbor);
+      if (neighbor === null) {
+        neighbors.push(dir);
       }
     }
 
-    return neighbors[Math.floor(Math.random() * neighbors.length)];
+    if (neighbors.length === 0) {
+      return undefined;
+    }
+
+    const randomDirection = neighbors[Math.floor(Math.random() * neighbors.length)];
+
+    const neighbor = cell.copy()
+
+    neighbor.x = cell.x + randomDirection.dx
+    neighbor.y = cell.y + randomDirection.dy
+
+    return neighbor
   }
 
   /**
@@ -76,34 +98,29 @@ export class MazeBuilder implements IBuilder {
    * @param current - The current cell.
    * @param next - The next cell to carve to, or null to isolate current.
    */
-  removeWall(current: Cell, next: Cell | null) {
-    if (next === null) {
-      current.walls.top = true;
-      current.walls.bottom = true;
-      current.walls.left = true;
-      current.walls.right = true;
-      return;
-    };
-    const dx = next.x - current.x;
-    const dy = next.y - current.y;
+  removeWall(current: Cell, from: Cell | null) {
+    current.walls.top = true;
+    current.walls.bottom = true;
+    current.walls.left = true;
+    current.walls.right = true;
 
-    next.walls.top = true;
-    next.walls.bottom = true;
-    next.walls.left = true;
-    next.walls.right = true;
+    if (from === null) return
+
+    const dx = from.x - current.x;
+    const dy = from.y - current.y;
 
     if (dx === 1) {
       current.walls.right = false;
-      next.walls.left = false;
+      from.walls.left = false;
     } else if (dx === -1) {
       current.walls.left = false;
-      next.walls.right = false;
+      from.walls.right = false;
     } else if (dy === 1) {
       current.walls.bottom = false;
-      next.walls.top = false;
+      from.walls.top = false;
     } else if (dy === -1) {
       current.walls.top = false;
-      next.walls.bottom = false;
+      from.walls.bottom = false;
     }
   }
 
@@ -111,14 +128,15 @@ export class MazeBuilder implements IBuilder {
    * Initializes the current cell if not already set.
    * Finds the first unvisited cell, marks it as visited, and logs the start.
    */
-  setCurrentCell() {
-    if (this.currentCell) return;
-    this.currentCell = this.findUnvisitedCell();
-    if (!this.currentCell) return;
-    this.removeWall(this.currentCell, null);
-    this.currentCell.visited = true;
-    this.unvisited = this.unvisited.filter(c => c !== this.currentCell);
-    gridLogger.log(`Starting new carve at (${this.currentCell.x}, ${this.currentCell.y})`);
+  carve(cell: Cell) {
+    this.removeWall(cell, this.currentCell);
+
+    this.currentCell = cell
+    this.maze.add(this.currentCell);
+    this.stack.push(cell);
+    this.grid.setCell(cell.x, cell.y, cell);
+
+    return true
   }
 
   /**
@@ -127,27 +145,17 @@ export class MazeBuilder implements IBuilder {
    * If no neighbors exist, backtracks to the previous cell.
    * @returns True if carving continued, false if the maze generation is complete.
    */
-  carve() {
-    this.setCurrentCell();
-    if (!this.currentCell) {
-      gridLogger.log("No current cell to carve from");
-      return false;
-    }
-
+  advanceMaze(): boolean {
+    if (!this.currentCell) return false
 
     const nextCell = this.getUnvisitedNeighbor(this.currentCell);
     if (nextCell) {
-      this.stack.push(this.currentCell);
       gridLogger.log(`Carving from (${this.currentCell.x}, ${this.currentCell.y}) to (${nextCell.x}, ${nextCell.y})`);
-      this.removeWall(this.currentCell, nextCell);
-      this.currentCell = nextCell;
-      this.currentCell.visited = true;
-      this.unvisited = this.unvisited.filter(c => c !== this.currentCell);
+      this.carve(nextCell)
       return true
     } else {
       gridLogger.log(`Backtracking from (${this.currentCell.x}, ${this.currentCell.y})`);
       this.currentCell = this.stack.pop() || null;
-      this.carve()
     }
     return true;
   }
@@ -168,12 +176,18 @@ export class MazeBuilder implements IBuilder {
    * @returns True if generation should continue, false if the maze is complete.
    */
   step(): boolean {
-    // if unvisited is empty, we're done
-    if (this.unvisited.length === 0) {
-      gridLogger.log("Maze generation complete");
-      return false;
+    if (this.grid.cells.filter(c => c === null).length === 0) return false
+
+    if (!this.currentCell) {
+      const cell = this.findUnvisitedCell()
+      if (!cell) {
+        gridLogger.log("MazeBuilder complete")
+        return false;
+      }
+      gridLogger.log(`Starting new carve at (${cell.x}, ${cell.y})`);
+      return this.carve(cell);
     }
-    gridLogger.log("MazeBuilder step");
-    return this.carve();
+
+    return this.advanceMaze();
   }
 }

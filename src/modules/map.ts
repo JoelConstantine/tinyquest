@@ -53,21 +53,22 @@ const blankTile = new Tile(0, 0, false, false)
  * Internal terrain data structure managing a 2D array of tiles.
  * Handles tile storage, retrieval, and boundary checking.
  */
-class Terrain {
+export class Terrain {
     tiles: Array<Tile | null>
     dimensions: Vector2D
-    fillTile: Tile = new Tile(0, 0)
     /**
      * Creates a new terrain with the specified dimensions.
      * @param width - Width of the terrain.
      * @param height - Height of the terrain.
      * @param fillTile - Optional tile to use as default fill.
      */
-    constructor(width: number, height: number, fillTile?: Tile) {
+    constructor(width: number, height: number) {
         this.tiles = []
         this.dimensions = new Vector2D(width, height)
-        if (fillTile) this.fillTile = fillTile
     }
+
+    get width() { return this.dimensions.x }
+    get height() { return this.dimensions.y }
 
     /**
      * Sets a tile at the specified coordinates.
@@ -78,7 +79,7 @@ class Terrain {
     setTile(newTile: Tile, x: number, y: number) {
         let tile = this.getTile(x, y)
         if (!tile) { 
-            tile = blankTile.copy()
+            tile = newTile.copy()
             this.tiles[y * this.dimensions.x + x] = tile
         }
         tile.becomeTile(newTile)
@@ -94,6 +95,15 @@ class Terrain {
     getTile(x: number, y: number): Tile | null {
         if (!this.inBounds(x, y)) return null
         return this.tiles[y * this.dimensions.x + x]
+    }
+
+    getNeighbors(x: number, y: number): Tile[] {
+        const neighbors: (Tile | null)[] = []
+        neighbors.push(this.getTile(x - 1, y))
+        neighbors.push(this.getTile(x + 1, y))
+        neighbors.push(this.getTile(x, y - 1))
+        neighbors.push(this.getTile(x, y + 1))
+        return neighbors.filter(tile => tile !== null)
     }
 
     /**
@@ -113,18 +123,21 @@ class Terrain {
      * @returns A new terrain instance.
      */
     static new(width: number, height: number): Terrain {
-        const terrain = new Terrain(width, height)
-      
-        return terrain
+        return new Terrain(width, height).init()
     }
 
     /**
      * Fills the entire terrain with the fill tile.
      */
     init() {
+        this.tiles = new Array(this.dimensions.x * this.dimensions.y)
+        return this
+    }
+
+    fillTile(fillTile: Tile) {
         for (let y = 0; y < this.dimensions.y; y++) {
             for (let x = 0; x < this.dimensions.x; x++) {
-                this.setTile(this.fillTile, x, y)
+                this.setTile(fillTile, x, y)
             }
         }
     }
@@ -146,7 +159,7 @@ export class GameMap {
      * @param width - The width of the map.
      * @param height - The height of the map.
      */
-    private constructor(width: number, height: number) {
+    constructor(width: number, height: number) {
         this.dimensions = new Vector2D(width, height)
         this.terrain = Terrain.new(width, height)
     }

@@ -1,17 +1,34 @@
+/**
+ * @packageDocumentation
+ * Room placement utilities used by dungeon generators. Provides a simple
+ * room builder that places rectangular rooms into a grid and helper types
+ * used by other generators.
+ */
 import { Rect } from "../../../engine/utils";
 import type { IGridBuilder } from "./builders";
 import { Grid, Cell } from "./grid";
 
+/**
+ * A cell specialization used during room placement. Tracks which room the
+ * cell belongs to and whether it has been visited/placed.
+ */
 export class BuilderCell extends Cell {
   visited: boolean = false
   room!: Room
   constructor(x: number, y: number) {
     super(x, y,)
   }
+  /**
+   * Factory helper to create a new BuilderCell.
+   */
   static new(x: number, y: number) {
     return new BuilderCell(x, y)
   }
 
+  /**
+   * Open a wall in the specified cardinal direction. Direction is a
+   * [dx, dy] pair where dx/dy are -1/0/1.
+   */
   breakWall(direction: [number, number]) {
     const dx = direction[0]
     const dy = direction[1]
@@ -28,12 +45,11 @@ export class BuilderCell extends Cell {
       this.walls.top = false;
     }
   }
-
-  copy() {
-    return new BuilderCell(this.x, this.y)
-  }
 }
 
+/**
+ * Lightweight logger used by the grid builders to output progress messages.
+ */
 class Logger {
   logFn = console.info;
 
@@ -43,6 +59,9 @@ class Logger {
 }
 export const gridLogger = new Logger();
 
+/**
+ * Options for configuring the `RoomBuilder`.
+ */
 type RoomBuilderOptions = {
   minRoomWidth?: number;
   minRoomHeight?: number;
@@ -57,6 +76,11 @@ const roomOptionsDefaults: RoomBuilderOptions = {
   maxRoomHeight: 5,
   maxAttempts: 50
 };
+
+/**
+ * Represents a rectangular room composed of `BuilderCell` instances.
+ * Tracks contained cells and exit points used for connecting rooms.
+ */
 export class Room extends Rect {
   cells: BuilderCell[] = [];
   exits: Set<BuilderCell> = new Set()
@@ -65,11 +89,15 @@ export class Room extends Rect {
     super(x, y, width, height);
   }
 
+  /** Add a cell to this room and set its room reference. */
   addCell(cell: BuilderCell) {
     cell.room = this
     this.cells.push(cell);
   }
 
+  /**
+   * Return border cells of the room (cells on the perimeter).
+   */
   getBorders(): BuilderCell[] {
       const borderCells: BuilderCell[] = []
       for (const cell of this.cells) {
@@ -81,12 +109,18 @@ export class Room extends Rect {
       return borderCells
   }
 
+  /**
+   * Mark a cell as an exit and add it to the room cells.
+   */
   addExit(cell: BuilderCell) {
     this.exits.add(cell)
     this.addCell(cell)
   }
 }
 
+/**
+ * Generate a random room fitting within the given grid and size bounds.
+ */
 const generateRandomRoom = (grid: Grid, minWidth: number, minHeight: number, maxWidth: number, maxHeight: number): Room => {
   const width = Math.floor(Math.random() * (maxWidth - minWidth + 1)) + minWidth;
   const height = Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
@@ -95,6 +129,10 @@ const generateRandomRoom = (grid: Grid, minWidth: number, minHeight: number, max
   return new Room(x, y, width, height);
 };
 
+/**
+ * Room placement builder. Attempts to place a number of non-overlapping
+ * rectangular rooms into the grid.
+ */
 export class RoomBuilder implements IGridBuilder {
   grid: Grid;
   minRoomWidth: number;
@@ -104,6 +142,9 @@ export class RoomBuilder implements IGridBuilder {
   maxAttempts: number;
   protected attempts: number = 0;
   readonly rooms: Room[] = [];
+  /**
+   * Create a new RoomBuilder.
+   */
   constructor(
     grid: Grid,
     minRoomWidth: number,
@@ -120,24 +161,25 @@ export class RoomBuilder implements IGridBuilder {
     this.maxAttempts = maxAttempts;
   }
 
+  /** Build all rooms synchronously. */
   build(): Grid {
-    // Implementation for building rooms in the grid
     while (this.step()) { }
     return this.grid;
   }
 
-  // Implementation for stepping through the room building process
+  /**
+   * Attempt to add a single room. Returns true while adding rooms, false
+   * when the maximum attempts have been reached.
+   */
   step() {
     if (this.attempts < this.maxAttempts) {
       gridLogger.log(`RoomBuilder Step: Attempt ${this.attempts + 1} of ${this.maxAttempts}`);
       this.attempts++;
-      // Attempt to add a room
       const room = generateRandomRoom(this.grid, this.minRoomWidth, this.minRoomHeight, this.maxRoomWidth, this.maxRoomHeight);
 
       gridLogger.log(`Generated room at (${room.x}, ${room.y}) with size ${room.width}x${room.height}`);
       // Check for overlaps and add the room if it doesn't overlap
       if (!Room.doesNotOverlap(room, this.rooms)) {
-        this.step();
         return true;
       }
 
@@ -149,11 +191,13 @@ export class RoomBuilder implements IGridBuilder {
     return false;
   }
 
+  /** Add a room to the builder and place it into the grid. */
   addRoom(room: Room) {
     this.rooms.push(room);
     this.placeRoom(room);
   }
 
+  /** Place the room's cells into the grid and mark walls on the perimeter. */
   placeRoom(room: Room) {
     gridLogger.log(`Placing room at (${room.x}, ${room.y}) with size ${room.width}x${room.height}`);
     for (let x = room.x; x < room.x + room.width; x++) {
@@ -170,6 +214,9 @@ export class RoomBuilder implements IGridBuilder {
     }
   }
 
+  /**
+   * Construct a RoomBuilder from options.
+   */
   static new(grid: Grid, options?: RoomBuilderOptions) {
     options = { ...roomOptionsDefaults, ...options };
     return new RoomBuilder(

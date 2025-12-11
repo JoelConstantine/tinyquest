@@ -1,9 +1,10 @@
-import { CanvasSurface, Surface } from "./engine/render/surface"
+import { CanvasSurface } from "./engine/render/surface"
 import { Toolbar } from "./modules/components"
 import { useRoomsAndMazes } from "./modules/generators/grid/roomsAndMazes"
 import type { Grid } from "./modules/generators/grid/grid"
 import { useForestGenerator } from "./modules/generators/forestGenerator"
 import type { Room } from "./modules/generators/grid/roomBuilder"
+import type { Terrain } from "./modules/map"
 
 class DisplayMaze {
     surface: CanvasSurface
@@ -17,10 +18,11 @@ class DisplayMaze {
     }
 
     draw(grid: Grid) {
+        this.initialize(grid)
         for (let y = 0; y < grid.height; y++) {
             for (let x = 0; x < grid.width; x++) {
                 const cell = grid.getCell(x, y)
-                if (!cell || !cell.visited) continue
+                if (!cell) continue
                 const px = x * 14
                 const py = y * 14
 
@@ -64,6 +66,20 @@ class DisplayMaze {
             }
         }
     }
+
+    drawTerrain(terrain: Terrain) {
+        this.surface.adjustResolution(terrain.dimensions.x * 14, terrain.dimensions.y * 14)
+        this.surface.drawRect(0, 0, this.surface.resolution.x, this.surface.resolution.y, '#000000')
+        for(const tile of terrain.tiles) {
+            if (!tile) continue
+            const px = tile.position.x * 14
+            const py = tile.position.y * 14
+
+            const color = tile.passable ? '#639c69ff' : '#5f4627ff'
+
+            this.surface.drawRect(px, py, 14, 14, color)
+        }
+    }
 }
 
 async function main() {
@@ -71,13 +87,6 @@ async function main() {
     //createAppearances(tilesetData.appearances)
     
     const surface = CanvasSurface.from('rooms-and-mazes')
-    const generator = useRoomsAndMazes(40, 40, {
-        minRoomWidth: 1,
-        minRoomHeight: 1,
-        maxRoomWidth: 5,
-        maxRoomHeight: 5,
-        maxAttempts: 60,
-    })
 
     const forestGenerator = useForestGenerator(80, 80, {
         rooms: {
@@ -90,13 +99,12 @@ async function main() {
     }) 
 
     const displayMaze = new DisplayMaze(surface)
-    displayMaze.initialize(generator.grid)
 
     const toolbar = new Toolbar(document.body)
 
     function tick() {
-        const working = generator.step()
-        displayMaze.draw(generator.grid)
+        const working = forestGenerator.step()
+        displayMaze.draw(forestGenerator.roomsAndMazes.grid)
 
         if (working) window.requestAnimationFrame(tick)
     }
@@ -104,12 +112,12 @@ async function main() {
     toolbar
         .addAction("Generate", () => {
             const forest = forestGenerator.build()
-            displayMaze.draw(forest.grid)
-            //displayMaze.drawRooms(forest.rooms)
+            //displayMaze.draw(forest.grid)
+            displayMaze.drawTerrain(forest.map.terrain)
         })
         .addAction("Step", () => {
-            generator.step()
-            displayMaze.draw(generator.grid)
+            forestGenerator.step()
+            displayMaze.draw(forestGenerator.roomsAndMazes.grid)
         })
         .addAction('Watch Generation', () => {
             // generator.start()

@@ -1,54 +1,11 @@
-import type { Grid } from "./grid/grid";
-import { gridLogger, type BuilderCell, type Room } from "./grid/roomBuilder";
+import type { Cell, Grid } from "./grid/grid";
+import { type Room } from "./grid/roomBuilder";
 import type { IBuilder } from "./grid/builders";
 import { RoomsAndMazes, useRoomsAndMazes, type RoomsAndMazesOptions } from "./grid/roomsAndMazes";
+import { connectRooms } from "./grid/utils";
+import { GameMap, Terrain, Tile } from "../map";
+import { Rect } from "../../engine/utils";
 
-const cardinalDirections = [[0, 1], [1, 0], [-1,0], [0,-1]] as [number, number][];
-
-function findConnectors(room: Room, grid: Grid) {
-  const borderingWalls = room.getBorders().reduce((acc, cell) => {
-    for (const direction of cardinalDirections) {
-      const neighboringCell = grid.getCell(cell.x + direction[0], cell.y + direction[1]) as BuilderCell
-
-      if (neighboringCell?.visited && neighboringCell?.room !== room) {
-        acc.push(neighboringCell)
-        break
-      }
-    }
-
-    return acc
-  }, [] as BuilderCell[])
-  return borderingWalls
-}
-
-const connectRooms = (grid: Grid, rooms: Room[]) => {
-  for (const room of rooms) { 
-    const borderCells = room.getBorders()
-
-    const connector = borderCells[Math.floor(Math.random() * borderCells.length)]
-
-    const neighborCells = []
-
-    for (const direction of cardinalDirections) {
-      const neighborCell = grid.getCell(connector.x + direction[0], connector.y + direction[1]) as BuilderCell
-
-      if (neighborCell.room !== connector.room) {
-        neighborCells.push({
-          direction: direction,
-          neighborCell
-        })
-      }
-    }
-
-    const neighbor = neighborCells[Math.floor(Math.random() * neighborCells.length)]
-
-    connector.breakWall(neighbor.direction)
-
-    neighbor.neighborCell.breakWall([-neighbor.direction[0], -neighbor.direction[1]])
-  }
-
-  return { grid, rooms }
-}
 
 interface IMapGenerator extends IBuilder {
   build(): { grid: Grid, rooms: Room[] }
@@ -56,6 +13,79 @@ interface IMapGenerator extends IBuilder {
 
 type ForestGeneratorOptions = {
   rooms?: RoomsAndMazesOptions
+}
+
+const pruneDeadEnds = (terrain: Terrain) => {
+  const deadends = terrain.tiles.filter(tile => {
+    if (!tile || !tile.passable) return false
+  
+    const wallCount = terrain.getNeighbors(tile.position.x, tile.position.y).reduce(
+      (count, neighbor) => count + (neighbor && !neighbor.passable ? 1 : 0),0)
+  
+    return wallCount >= 3
+  }) as Tile[];
+
+  for (const deadend of deadends) {
+    deadend.passable = false
+    deadend.transparent = false
+    //grid.setCell(deadend.x, deadend.y, null);
+  }
+}
+
+const WALL_TILE = new Tile(0,0, false, false)
+const FLOOR_TILE = new Tile(0,0, true, true)
+
+const wallToTile = (wall: boolean) => wall ? WALL_TILE : FLOOR_TILE
+
+class ForestMap extends GameMap {
+  path: Set<Tile> = new Set()
+  rooms: Set<TerrainRoom> = new Set()
+  constructor(width: number, height: number) {
+    super(width, height)
+  }
+
+  static fromTerrain(terrain: Terrain) {
+    const map = new ForestMap(terrain.width, terrain.height)
+    map.terrain = terrain
+    return map
+  }
+
+  addRoom(room: TerrainRoom) {
+    for (let x = room.x; x < room.x + room.width; x++) {
+      for (let y = room.y; y < room.y + room.height; y++) {
+        const tile = this.terrain.getTile(x, y)
+        if (tile) room.addTile(tile)
+      }
+    }
+  }
+}
+
+class TerrainRoom extends Rect {
+  tiles: Tile[] = []
+  constructor(x: number, y: number, width: number, height: number) {
+    super(x, y, width, height)
+  }
+
+  addTile(tile: Tile) {
+    this.tiles.push(tile)
+  }
+}
+
+const cellsToTerrain = (grid: Grid, cells?: Cell[]) => {
+  const terrain = Terrain.new(grid.width * 2, grid.height * 2)
+  terrain.fillTile(WALL_TILE)
+
+  for (const cell of cells ?? grid.cells) {
+    if (cell === null) continue
+    terrain.setTile(FLOOR_TILE.copy(), cell.x * 2, cell.y * 2)
+
+    terrain.setTile(wallToTile(cell.walls.top),cell.x * 2, cell.y * 2 - 1)
+    terrain.setTile(wallToTile(cell.walls.right),cell.x * 2 + 1, cell.y * 2)
+    terrain.setTile(wallToTile(cell.walls.bottom),cell.x * 2, cell.y * 2 + 1)
+    terrain.setTile(wallToTile(cell.walls.left),cell.x * 2 - 1, cell.y * 2)
+  }
+
+  return terrain
 }
 
 
@@ -66,14 +96,30 @@ export class ForestGenerator implements IMapGenerator {
   }
 
   init() {
-    this.roomsAndMazes.start();
+    this.roomsAndMazes.init();
   }
 
   build() {
-    const grid = this.roomsAndMazes.build();
-    const rooms = this.roomsAndMazes.roomBuilder.rooms;
+    this.init()
+    while(this.step()) {}
+    connectRooms(this.roomsAndMazes.grid, this.roomsAndMazes.roomBuilder.rooms)
+    
+    const terrain = cellsToTerrain(this.roomsAndMazes.grid, Array.from(this.roomsAndMazes.mazeBuilder.maze))
+    const map = ForestMap.fromTerrain(terrain)
 
-    return connectRooms(grid, rooms)
+    for (const room of this.roomsAndMazes.roomBuilder.rooms) {
+      const terrainRoom = new TerrainRoom(room.x * 2, room.y * 2, room.width * 2 - 1, room.height * 2 - 1)
+
+      map.addRoom(terrainRoom)
+
+      terrainRoom.tiles.forEach(tile => tile.passable = true)
+    }
+
+    for(let i = 0; i < 30; i++) {
+      pruneDeadEnds(terrain)
+    }
+
+    return { grid: this.roomsAndMazes.grid, rooms: this.roomsAndMazes.roomBuilder.rooms, terrain, map };
   }
 
   step(): boolean {
